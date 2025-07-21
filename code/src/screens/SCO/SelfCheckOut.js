@@ -1,18 +1,40 @@
 import React, {useState} from 'react';
-import { CheckoutsContext, LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
-import { Box, Button, Text, Heading, Center, HStack, Icon, FlatList, AlertDialog, FormControl, Input, Modal } from 'native-base';
-import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import {
+     CheckoutsContext,
+     LanguageContext,
+     LibraryBranchContext,
+     LibrarySystemContext,
+     ThemeContext,
+     UserContext,
+} from '../../context/initialContext';
+import {
+     Box,
+     Button,
+     ButtonGroup,
+     ButtonIcon,
+     ButtonText,
+     Text,
+     Heading,
+     Center,
+     HStack,
+     Icon,
+     FlatList,
+     FormControl,
+     FormControlLabel,
+     FormControlLabelText,
+     Input, InputField,
+     Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter,
+     CloseIcon, ModalCloseButton,
+     AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter,
+} from '@gluestack-ui/themed';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { navigateStack } from '../../helpers/RootNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash';
 import { loadingSpinner } from '../../components/loadingSpinner';
-import { checkoutItem, placeHold } from '../../util/recordActions';
-import { confirmHold } from '../../util/api/circulation';
-import { getPatronCheckedOutItems, refreshProfile } from '../../util/api/user';
-import { Platform } from 'react-native';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {ButtonGroup} from "@gluestack-ui/themed";
+import { checkoutItem } from '../../util/recordActions';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const SelfCheckOut = () => {
      const queryClient = useQueryClient();
@@ -25,6 +47,7 @@ export const SelfCheckOut = () => {
      const passedItems = useRoute().params?.items ?? [];
      const [items, setItems] = React.useState(passedItems);
      const { selfCheckSettings } = React.useContext(LibraryBranchContext);
+     const {textColor, colorMode, theme} = React.useContext(ThemeContext);
 
      let startNew = useRoute().params?.startNew ?? false;
      let activeAccount = useRoute().params?.activeAccount ?? user;
@@ -147,11 +170,11 @@ export const SelfCheckOut = () => {
      const currentCheckoutHeader = () => {
           if (_.size(items) >= 1) {
                return (
-                    <HStack space={4} justifyContent="space-between" pb={2}>
-                         <Text bold fontSize="xs" w="70%">
+                    <HStack space="md" justifyContent="space-between" pb="$2">
+                         <Text bold fontSize="xs" w="70%" color={textColor}>
                               {getTermFromDictionary(language, 'title')}
                          </Text>
-                         <Text bold fontSize="xs" w="25%">
+                         <Text bold fontSize="xs" w="25%" color={textColor}>
                               {getTermFromDictionary(language, 'checkout_due')}
                          </Text>
                     </HStack>
@@ -166,11 +189,11 @@ export const SelfCheckOut = () => {
                let barcode = item?.barcode ?? '';
                let dueDate = item?.due ?? '';
                return (
-                    <HStack space={4} justifyContent="space-between">
-                         <Text fontSize="xs" w="70%">
+                    <HStack space="md" justifyContent="space-between">
+                         <Text fontSize="xs" w="70%" color={textColor}>
                               <Text bold>{title}</Text> ({barcode})
                          </Text>
-                         <Text fontSize="xs" w="25%">
+                         <Text fontSize="xs" w="25%" color={textColor}>
                               {dueDate}
                          </Text>
                     </HStack>
@@ -180,55 +203,65 @@ export const SelfCheckOut = () => {
      };
 
      const currentCheckOutEmpty = () => {
-          return <Text>{getTermFromDictionary(language, 'no_items_checked_out')}</Text>;
+          return <Text color={textColor}>{getTermFromDictionary(language, 'no_items_checked_out')}</Text>;
      };
 
      const currentCheckOutFooter = () => {};
 
      return (
-          <Box safeArea={5} w="100%">
-               <Center pb={5}>
+          <Box p="$5" w="100%">
+               <Center pb="$5">
                     {activeAccount?.displayName ? (
-                         <Text pb={3}>
+                         <Text pb="$3" color={textColor}>
                               {getTermFromDictionary(language, 'checking_out_as')} {activeAccount.displayName}
                          </Text>
                     ) : null}
                     {keyboardType === 0 ? (
-                        <Button leftIcon={<Icon as={<Ionicons name="barcode-outline" />} size={6} mr="1" />} colorScheme="secondary" onPress={() => openScanner()}>
-                             {getTermFromDictionary(language, 'add_new_item')}
+                        <Button bgColor={theme['colors']['secondary']['500']} onPress={() => openScanner()}>
+                             <ButtonIcon as={Ionicons} name="barcode-outline" color={theme['colors']['secondary']['500-text']} />
+                             <ButtonText color={theme['colors']['secondary']['500-text']}>{getTermFromDictionary(language, 'add_new_item')}</ButtonText>
                         </Button>
                     ) : (
                         <Center>
                              <FormControl>
                                   <Center>
-                                       <FormControl.Label>{getTermFromDictionary(language, 'add_new_item')}</FormControl.Label>
+                                       <FormControlLabel>
+                                            <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'add_new_item')}</FormControlLabelText>
+                                       </FormControlLabel>
                                        <ButtonGroup sp="md">
-                                             <Button leftIcon={<Icon as={<Ionicons name="barcode-outline" />} size={6} mr="3" />} colorScheme="secondary" onPress={() => openScanner()}>
-                                                  {getTermFromDictionary(language, 'scan')}
+                                             <Button bgColor={theme['colors']['secondary']['500']}onPress={() => openScanner()}>
+                                                  <ButtonIcon as={Ionicons} name="barcode-outline" color={theme['colors']['secondary']['500-text']}/>
+                                                  <ButtonText color={theme['colors']['secondary']['500-text']}>{getTermFromDictionary(language, 'scan')}</ButtonText>
                                              </Button>
-                                             <Button leftIcon={<Icon as={<Ionicons name="keypad-outline" />} size={6} mr="3" />} colorScheme="secondary" onPress={toggle}>
-                                                  {getTermFromDictionary(language, 'type')}
+                                             <Button bgColor={theme['colors']['secondary']['500']} onPress={toggle}>
+                                                  <ButtonIcon as={Ionicons} name="keypad-outline" color={theme['colors']['secondary']['500-text']} />
+                                                  <ButtonText color={theme['colors']['secondary']['500-text']}>{getTermFromDictionary(language, 'type')}</ButtonText>
                                              </Button>
                                        </ButtonGroup>
                                   </Center>
                              </FormControl>
                              <Modal isOpen={showModal} onClose={toggle} size="md" avoidKeyboard>
-                                  <Modal.Content maxWidth="90%" bg="white" _dark={{ bg: 'coolGray.800' }}>
-                                       <Modal.CloseButton />
-                                       <Modal.Header>
-                                            <Heading size="md">{getTermFromDictionary(language, 'add_new_item')}</Heading>
-                                       </Modal.Header>
-                                       <Modal.Body>
-                                            <FormControl pb={5}>
-                                                 <Input keyboardType={keyboardType === 1 ? 'number-pad' : 'default'} variant="outline" autoCapitalize="none" placeholder={getTermFromDictionary(language, 'enter_barcode')} size="lg" defaultValue={newBarcode} onChangeText={text => setNewBarcode(text)} />
+                                  <ModalBackdrop />
+                                  <ModalContent maxWidth="90%" bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
+                                       <ModalHeader>
+                                            <Heading size="md" color={textColor}>{getTermFromDictionary(language, 'add_new_item')}</Heading>
+                                            <ModalCloseButton hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}>
+                                                 <Icon as={CloseIcon} color={textColor} />
+                                            </ModalCloseButton>
+                                       </ModalHeader>
+                                       <ModalBody>
+                                            <FormControl pb="$5">
+                                                 <Input>
+                                                      <InputField color={textColor} keyboardType={keyboardType === 1 ? 'number-pad' : 'default'} variant="outline" autoCapitalize="none" placeholder={getTermFromDictionary(language, 'enter_barcode')} size="lg" defaultValue={newBarcode} onChangeText={text => setNewBarcode(text)}/>
+                                                 </Input>
                                             </FormControl>
-                                       </Modal.Body>
-                                       <Modal.Footer>
-                                            <Button.Group>
-                                                 <Button variant="outline" onPress={toggle}>
-                                                      {getTermFromDictionary(language, 'close_window')}
+                                       </ModalBody>
+                                       <ModalFooter>
+                                            <ButtonGroup>
+                                                 <Button variant="outline" onPress={toggle} borderColor={theme['colors']['primary']['500']}>
+                                                      <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'close_window')}</ButtonText>
                                                  </Button>
-                                                 <Button onPress={() => {
+                                                 <Button bgColor={theme['colors']['primary']['500']} onPress={() => {
                                                       navigation.replace('SelfCheckOut', {
                                                            barcode: newBarcode,
                                                            type: null,
@@ -236,44 +269,46 @@ export const SelfCheckOut = () => {
                                                            startNew: false,
                                                            items,
                                                       });
+
                                                  }}>
-                                                      {getTermFromDictionary(language, 'add_new_item')}
+                                                      <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'add_new_item')}</ButtonText>
                                                  </Button>
-                                            </Button.Group>
-                                       </Modal.Footer>
-                                  </Modal.Content>
+                                            </ButtonGroup>
+                                       </ModalFooter>
+                                  </ModalContent>
                              </Modal>
                         </Center>
                     )}
                </Center>
-               <Heading fontSize="md" pb={2}>
+               <Heading fontSize="md" pb="$2" color={textColor}>
                     {getTermFromDictionary(language, 'checked_out_during_session')}
                </Heading>
                {isProcessingCheckout ? (
                    <Center>
-                        <Text pb={5}>{getTermFromDictionary(language, 'processing_checkout_message')}</Text>
+                        <Text pb="$5" color={textColor}>{getTermFromDictionary(language, 'processing_checkout_message')}</Text>
                         {loadingSpinner()}
                    </Center>
                ) : <FlatList data={items} keyExtractor={(item, index) => index.toString()} ListEmptyComponent={currentCheckOutEmpty()} ListHeaderComponent={currentCheckoutHeader()} renderItem={({ item }) => currentCheckOutItem(item)} />
                }
-               <Center pt={5}>
-                    <Button onPress={() => finishSession()} colorScheme="primary" size="sm">
-                         {getTermFromDictionary(language, 'button_finish')}
+               <Center pt="$5">
+                    <Button onPress={() => finishSession()} bgColor={theme['colors']['primary']['500']} size="sm">
+                         <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'button_finish')}</ButtonText>
                     </Button>
                </Center>
                <Center>
                     <AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onClose}>
-                         <AlertDialog.Content>
-                              <AlertDialog.Header>{errorTitle}</AlertDialog.Header>
-                              <AlertDialog.Body>{errorBody}</AlertDialog.Body>
-                              <AlertDialog.Footer>
-                                   <Button.Group space={3}>
-                                        <Button variant="outline" colorScheme="primary" onPress={() => setIsOpen(false)}>
-                                             {getTermFromDictionary(language, 'button_ok')}
+                         <AlertDialogBackdrop />
+                         <AlertDialogContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
+                              <AlertDialogHeader><Heading size="md" color={textColor}>{errorTitle}</Heading></AlertDialogHeader>
+                              <AlertDialogBody><Text color={textColor}>{errorBody}</Text></AlertDialogBody>
+                              <AlertDialogFooter>
+                                   <ButtonGroup space="sm">
+                                        <Button variant="outline" borderColor={theme['colors']['primary']['500']} onPress={() => setIsOpen(false)}>
+                                             <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'button_ok')}</ButtonText>
                                         </Button>
-                                   </Button.Group>
-                              </AlertDialog.Footer>
-                         </AlertDialog.Content>
+                                   </ButtonGroup>
+                              </AlertDialogFooter>
+                         </AlertDialogContent>
                     </AlertDialog>
                </Center>
           </Box>

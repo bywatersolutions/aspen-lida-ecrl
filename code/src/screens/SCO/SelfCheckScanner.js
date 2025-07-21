@@ -1,22 +1,20 @@
 import { useIsFocused, useRoute } from '@react-navigation/native';
 import { Camera, CameraView } from 'expo-camera';
 import _ from 'lodash';
-import { Button, Center, View } from 'native-base';
+import { Button, ButtonText, Center, View } from '@gluestack-ui/themed';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import BarcodeMask from 'react-native-barcode-mask';
 import { loadError } from '../../components/loadError';
 import { LoadingSpinner, loadingSpinner } from '../../components/loadingSpinner';
-import { LanguageContext, LibraryBranchContext, LibrarySystemContext } from '../../context/initialContext';
+import { LanguageContext, LibraryBranchContext } from '../../context/initialContext';
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
 export default function SelfCheckScanner() {
-     //const navigation = useNavigation();
      const isFocused = useIsFocused();
      const [isLoading, setIsLoading] = React.useState(false);
      const { language } = React.useContext(LanguageContext);
-     const { library } = React.useContext(LibrarySystemContext);
      const { selfCheckSettings } = React.useContext(LibraryBranchContext);
      const [hasPermission, setHasPermission] = React.useState(null);
      const [scanned, setScanned] = React.useState(false);
@@ -86,8 +84,10 @@ export default function SelfCheckScanner() {
                               <BarcodeMask edgeColor="#62B1F6" showAnimatedLine={false} />
                          </CameraView>
                          {scanned && (
-                              <Center pb={20}>
-                                   <Button onPress={() => setScanned(false)}>{getTermFromDictionary(language, 'scan_again')}</Button>
+                              <Center pb="$20">
+                                   <Button onPress={() => setScanned(false)}>
+                                        <ButtonText>{getTermFromDictionary(language, 'scan_again')}</ButtonText>
+                                   </Button>
                               </Center>
                          )}
                     </>
