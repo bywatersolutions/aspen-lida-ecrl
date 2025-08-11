@@ -82,7 +82,7 @@ export const MyLinkedAccounts = () => {
 
      if (!canUserLinkAccounts) {
           return (
-               <ScrollView p="$5" flex="$1">
+               <ScrollView p="$5" flex={1}>
                     {showSystemMessage()}
                     {ptypeDisabledLinking ? (
                          <DisplayMessage type="info" message={getTermFromDictionary(language, 'linked_account_disabled_by_ptype')} />
@@ -97,7 +97,7 @@ export const MyLinkedAccounts = () => {
      }
 
      return (
-          <ScrollView p="$2" flex="$1">
+          <ScrollView p="$2" flex={1}>
                {showSystemMessage()}
                <DisplayMessage type="info" message={getTermFromDictionary(language, 'linked_info_message')} />
                {user.addLinkedAccountRule !== 1 ? (
