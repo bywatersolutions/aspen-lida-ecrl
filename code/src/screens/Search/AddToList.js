@@ -156,8 +156,7 @@ export const AddToList = (props) => {
                                                                  onValueChange={(itemValue) => {
                                                                       setListId(itemValue);
                                                                  }}>
-                                                                 <SelectTrigger borderWidth={colorMode === 'light' ? '$none' : '$1'}
-                                                                                borderColor={colorMode === 'light' ? '$none' : theme['colors']['gray']['400']}>
+                                                                 <SelectTrigger>
                                                                       <SelectInput color={textColor} placeholder="Select list" />
                                                                       <SelectIcon mr="$3">
                                                                            <Icon color={textColor} as={ChevronDownIcon} />
