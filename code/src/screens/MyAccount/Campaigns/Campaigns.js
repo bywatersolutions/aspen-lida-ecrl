@@ -318,7 +318,7 @@ export const MyCampaigns = () => {
 	};
 
 
-	const ActivityTable = ({ items, title, type, campaignId, linkedUserId, isEnrolled }) => {
+	const ActivityTable = ({ items, title, type, campaignId, linkedUserId, isEnrolled, campaignIsPast, campaignIsUpcoming }) => {
 
 		if (!Array.isArray(items) || items.length === 0) {
 			return null;
@@ -337,7 +337,7 @@ export const MyCampaigns = () => {
 		}
 
 		const shouldShowButton = (item) => {
-			if (!isEnrolled) {
+			if (!isEnrolled || campaignIsPast || campaignIsUpcoming) {
 				return false;
 			}
 
@@ -501,6 +501,8 @@ export const MyCampaigns = () => {
 									campaignId={item.id}
 									linkedUserId={linkedUserIdForActivities}
 									isEnrolled={isUserEnrolled}
+									campaignIsPast={item.isPast}
+									campaignIsUpcoming={item.isUpcoming}
 								/>
 								<ActivityTable 
 									items={item.extraCreditActivities}
@@ -509,6 +511,8 @@ export const MyCampaigns = () => {
 									campaignId={item.id}
 									linkedUserId={linkedUserIdForActivities}
 									isEnrolled={isUserEnrolled}
+									campaignIsPast={item.isPast}
+									campaignIsUpcoming={item.isUpcoming}
 								/>
 							</>
 						)}
