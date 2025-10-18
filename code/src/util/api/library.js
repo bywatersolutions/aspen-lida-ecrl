@@ -39,17 +39,7 @@ export async function getLibraryInfo(url = null, id = null) {
                id: libraryId,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getLibraryInfo');
-     if (response.ok) {
-          if (response.data.result) {
-               return response.data.result.library;
-          }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return [];
-     }
+     return await discovery.get('/SystemAPI?method=getLibraryInfo');
 }
 
 /**
@@ -64,16 +54,7 @@ export async function getLibraryLinks(url = null) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await discovery.post('/SystemAPI?method=getLibraryLinks', postBody);
-     if (response.ok) {
-          if (response?.data?.result?.items) {
-               return response?.data?.result?.items;
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await discovery.post('/SystemAPI?method=getLibraryLinks', postBody);
 }
 
 /**
@@ -87,20 +68,7 @@ export async function getLibraryLanguages(url = null) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await api.get('/SystemAPI?method=getLanguages');
-     if (response.ok) {
-          let languages = [];
-          if (response?.data?.result) {
-               logDebugMessage('Library languages saved at Loading');
-               return _.sortBy(response.data.result.languages, 'weight', 'displayName');
-          }
-          return languages;
-     } else {
-          logErrorMessage("Error loading library languages");
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await api.get('/SystemAPI?method=getLanguages');
 }
 
 /**
@@ -121,28 +89,7 @@ export async function getSystemMessages(libraryId = null, locationId = null, url
                locationId,
           },
      });
-     const response = await api.post('/SystemAPI?method=getSystemMessages', postBody);
-     if (response.ok) {
-          let messages = [];
-          if (response?.data?.result) {
-               /*
-			 0 => 'All Pages',
-			 1 => 'All Account Pages',
-			 2 => 'Checkouts Page',
-			 3 => 'Holds Page',
-			 4 => 'Fines Page',
-			 5 => 'Contact Information Page'
-			 */
-               logDebugMessage('System messages fetched and stored');
-               return _.castArray(response.data.result.systemMessages);
-          }
-          return messages;
-     } else {
-          logErrorMessage("Error loading system messages");
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await api.post('/SystemAPI?method=getSystemMessages', postBody);
 }
 
 /**
@@ -186,28 +133,7 @@ export async function getCatalogStatus(url = null) {
           headers: getHeaders(),
           auth: createAuthTokens(),
      });
-     const response = await api.get('/SystemAPI?method=getCatalogStatus');
-     if (response.ok) {
-          if (response?.data?.result) {
-               let catalogMessage = null;
-               if (response?.data?.result?.api?.message) {
-                    catalogMessage = stripHTML(response?.data?.result?.api.message);
-               }
-               return {
-                    status: response?.data?.result?.catalogStatus ?? 0,
-                    message: catalogMessage,
-               };
-          }
-     } else {
-          logErrorMessage("Error getting catalog status");
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
-     return {
-          status: 0,
-          message: null,
-     };
+     return await api.get('/SystemAPI?method=getCatalogStatus');
 }
 
 /**
@@ -222,21 +148,7 @@ export async function getSelfRegistrationForm(url = '') {
           headers: getHeaders(),
           auth: createAuthTokens(),
      });
-     const response = await api.get('/RegistrationAPI?method=getSelfRegistrationForm');
-     if (response.ok) {
-          if (response?.data?.result) {
-               let fields = [];
-               if (response?.data?.result) {
-                    fields = response.data.result;
-               }
-               return fields;
-          }
-     } else {
-          logErrorMessage("Error getting self registration form");
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await api.get('/RegistrationAPI?method=getSelfRegistrationForm');
 }
 
 export async function submitSelfRegistration(url = '', data = []) {
@@ -248,19 +160,5 @@ export async function submitSelfRegistration(url = '', data = []) {
           auth: createAuthTokens(),
           params: data,
      });
-     const response = await api.post('/RegistrationAPI?method=processSelfRegistration');
-     if (response.ok) {
-          if (response?.data?.result) {
-               return response.data.result;
-          }
-          return response.data;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return {
-               success: false,
-               message: error.message ?? 'There was an error processing your registration. Please contact your library.',
-          }
-     }
+     return await api.post('/RegistrationAPI?method=processSelfRegistration');
 }

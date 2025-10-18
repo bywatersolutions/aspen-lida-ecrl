@@ -46,22 +46,16 @@ export async function getLists(url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await api.post('/ListAPI?method=getUserLists&checkIfValid=false', postBody);
-     if (response.ok) {
-          let lists = [];
-          if (response.data.result.success) {
-               if (!_.isUndefined(response.data.result.lists)) {
-                    lists = _.sortBy(response.data.result.lists, ['title']);
-               }
-          }
-          PATRON.lists = lists;
-          return lists;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return [];
+     return await api.post('/ListAPI?method=getUserLists&checkIfValid=false', postBody);
+}
+
+export function formatLists(data) {
+     let lists = [];
+     if (!_.isUndefined(data.lists)) {
+          lists = _.sortBy(data.lists, ['title']);
      }
+     PATRON.lists = lists;
+     return lists;
 }
 
 /**

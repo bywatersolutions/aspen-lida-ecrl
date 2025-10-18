@@ -229,7 +229,7 @@ export async function fetchAllLibrariesFromGreenhouse() {
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
      });
-     const response = await api.get('/GreenhouseAPI?method=getLibraries', {
+     return await api.get('/GreenhouseAPI?method=getLibraries', {
           release_channel: channel,
      });
      if (response.ok) {

@@ -31,25 +31,7 @@ export async function refreshProfile(url) {
           },
      });
      logDebugMessage("Refreshing profile");
-     const response = await discovery.post(`${endpoint.url}getPatronProfile`, postBody);
-     if (response.ok) {
-          if (response.data?.result) {
-               if (response.data?.result?.profile) {
-                    return response.data.result.profile;
-               } else {
-                    return response.data.result;
-               }
-          }else{
-               logWarnMessage("Refreshing profile failed, did not get a result");
-          }
-     }else{
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-     return {
-          success: false,
-          errorFetching: true
-     };
+     return await discovery.post(`${endpoint.url}getPatronProfile`, postBody);
 }
 
 /**
@@ -107,7 +89,7 @@ export async function loginToLiDA(username, password, url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const results = await discovery.post('/UserAPI?method=loginToLiDA', postBody);
+     return await discovery.post('/UserAPI?method=loginToLiDA', postBody);
      if (results.ok) {
           logInfoMessage("Got API response from loginToLiDA");
           logInfoMessage(results.data);
@@ -150,6 +132,7 @@ export async function validateUser(username, password, url) {
  * @param {string} url
  **/
 export async function validateSession(url) {
+     logDebugMessage("Validating Session");
      const postBody = await postData();
      const api = create({
           baseURL: url + '/API',
@@ -157,18 +140,7 @@ export async function validateSession(url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await api.post('/UserAPI?method=validateSession', postBody);
-     logDebugMessage("Validating Session");
-     if (response.ok) {
-          if (response?.data?.result) {
-               return response.data.result;
-          }
-     } else {
-          logWarnMessage("Validating Session failed");
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-     return [];
+     return await api.post('/UserAPI?method=validateSession', postBody);
 }
 
 /**
@@ -354,63 +326,31 @@ export async function getPatronHolds(readySort = 'expire', pendingSort = 'sortTi
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getPatronHolds', postBody);
-     if (response.ok) {
-          const allHolds = response.data.result.holds;
-          let holds;
-          let holdsReady = [];
-          let holdsNotReady = [];
+     return await discovery.post('/UserAPI?method=getPatronHolds', postBody);
+}
 
-          let pendingSortMethod = pendingSort;
-          if (pendingSort === 'sortTitle') {
-               pendingSortMethod = 'title';
-          } else if (pendingSort === 'libraryAccount') {
-               pendingSortMethod = 'user';
-          }
+export function formatHolds(data) {
+     let holdsReady = [];
+     let holdsNotReady = [];
 
-          let readySortMethod = readySort;
-          if (readySort === 'sortTitle') {
-               readySortMethod = 'title';
-          } else if (readySort === 'libraryAccount') {
-               readySortMethod = 'user';
-          }
-
-          if (typeof allHolds !== 'undefined') {
-               if (typeof allHolds.unavailable !== 'undefined') {
-                    holdsNotReady = Object.values(allHolds.unavailable);
-                    if (pendingSortMethod === 'position') {
-                         holdsNotReady = orderBy(holdsNotReady, [pendingSortMethod], ['desc']);
-                    }
-                    holdsNotReady = orderBy(holdsNotReady, [pendingSortMethod], ['asc']);
-               }
-
-               if (typeof allHolds.available !== 'undefined') {
-                    holdsReady = Object.values(allHolds.available);
-                    holdsReady = orderBy(holdsReady, [readySortMethod], ['asc']);
-               }
-          }
-
-          holds = holdsReady.concat(holdsNotReady);
-          PATRON.holds = holds;
-          return [
-               {
-                    title: 'Ready',
-                    data: holdsReady,
-               },
-               {
-                    title: 'Pending',
-                    data: holdsNotReady,
-               },
-          ];
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return {
-               holds: [],
-               holdsReady: [],
-               holdsNotReady: [],
-          };
+     if (typeof data.unavailable !== 'undefined') {
+          holdsNotReady = Object.values(data.unavailable);
      }
+
+     if (typeof data.available !== 'undefined') {
+          holdsReady = Object.values(data.available);
+     }
+
+     return [
+          {
+               title: 'Ready',
+               data: holdsReady,
+          },
+          {
+               title: 'Pending',
+               data: holdsNotReady,
+          },
+     ];
 }
 
 export function sortHolds(holds, pendingSort, readySort) {
@@ -487,20 +427,7 @@ export async function getPatronCheckedOutItems(source = 'all', url, refresh = tr
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getPatronCheckedOutItems', postBody);
-     if (response.ok) {
-          if (response.data?.result?.success) {
-               let items = response.data.result.checkedOutItems ?? [];
-               items = sortBy(items, ['daysUntilDue', 'title']);
-               return items;
-          }else{
-               return [];
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await discovery.post('/UserAPI?method=getPatronCheckedOutItems', postBody);
 }
 
 export function sortCheckouts(checkouts, sort) {
@@ -567,14 +494,11 @@ export async function deleteAspenUser(url) {
  ******************************************************************* **/
 /**
  * Return a list of accounts that the user has initiated account linking with
- * @param {array} primaryUser
- * @param {array} cards
- * @param {string} barcodeStyle
  * @param {string} url
  * @param {string} language
  * @return array
  **/
-export async function getLinkedAccounts(primaryUser, cards, barcodeStyle, url, language = 'en') {
+export async function getLinkedAccounts(url, language = 'en') {
      const postBody = await postData();
      const discovery = create({
           baseURL: url + '/API',
@@ -585,69 +509,63 @@ export async function getLinkedAccounts(primaryUser, cards, barcodeStyle, url, l
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getLinkedAccounts', postBody);
-     if (response.ok) {
-          let count = 1;
-          let cardStack = [];
-          let accounts = [];
-          const primaryCard = {
-               key: 0,
-               displayName: primaryUser.displayName,
-               userId: primaryUser.id,
-               ils_barcode: primaryUser.ils_barcode ?? primaryUser.cat_username,
-               expired: primaryUser.expired,
-               expires: primaryUser.expires,
-               barcodeStyle: barcodeStyle,
-               homeLocation: primaryUser.homeLocation,
-          };
-          cardStack.push(primaryCard);
-          if (!isUndefined(response.data.result.linkedAccounts)) {
-               accounts = values(response.data.result.linkedAccounts);
-               PATRON.linkedAccounts = accounts;
-               if (size(accounts) >= 1) {
-                    accounts.forEach((account) => {
-                         if (includes(cards, account.ils_barcode) === false) {
-                              count = count + 1;
-                              const card = {
-                                   key: count,
-                                   displayName: account.displayName,
-                                   userId: account.id,
-                                   ils_barcode: account.ils_barcode ?? account.barcode,
-                                   expired: account.expired,
-                                   expires: account.expires,
-                                   barcodeStyle: account.barcodeStyle ?? barcodeStyle,
-                                   homeLocation: account.homeLocation,
-                              };
-                              cardStack.push(card);
-                         } else if (includes(cards, account.cat_username) === false) {
-                              count = count + 1;
-                              const card = {
-                                   key: count,
-                                   displayName: account.displayName,
-                                   userId: account.id,
-                                   cat_username: account.cat_username ?? account.barcode,
-                                   expired: account.expired,
-                                   expires: account.expires,
-                                   barcodeStyle: account.barcodeStyle ?? barcodeStyle,
-                                   homeLocation: account.homeLocation,
-                              };
-                              cardStack.push(card);
-                         }
-                    });
-               }
+     return await discovery.post('/UserAPI?method=getLinkedAccounts', postBody);
+}
+
+export function formatLinkedAccounts(primaryUser, cards, barcodeStyle, data) {
+     let count = 1;
+     let cardStack = [];
+     let accounts = [];
+     const primaryCard = {
+          key: 0,
+          displayName: primaryUser.displayName,
+          userId: primaryUser.id,
+          ils_barcode: primaryUser.ils_barcode ?? primaryUser.cat_username,
+          expired: primaryUser.expired,
+          expires: primaryUser.expires,
+          barcodeStyle: barcodeStyle,
+          homeLocation: primaryUser.homeLocation,
+     };
+     cardStack.push(primaryCard);
+     if (!isUndefined(data)) {
+          accounts = values(data);
+          PATRON.linkedAccounts = accounts;
+          if (size(accounts) >= 1) {
+               accounts.forEach((account) => {
+                    if (includes(cards, account.ils_barcode) === false) {
+                         count = count + 1;
+                         const card = {
+                              key: count,
+                              displayName: account.displayName,
+                              userId: account.id,
+                              ils_barcode: account.ils_barcode ?? account.barcode,
+                              expired: account.expired,
+                              expires: account.expires,
+                              barcodeStyle: account.barcodeStyle ?? barcodeStyle,
+                              homeLocation: account.homeLocation,
+                         };
+                         cardStack.push(card);
+                    } else if (includes(cards, account.cat_username) === false) {
+                         count = count + 1;
+                         const card = {
+                              key: count,
+                              displayName: account.displayName,
+                              userId: account.id,
+                              cat_username: account.cat_username ?? account.barcode,
+                              expired: account.expired,
+                              expires: account.expires,
+                              barcodeStyle: account.barcodeStyle ?? barcodeStyle,
+                              homeLocation: account.homeLocation,
+                         };
+                         cardStack.push(card);
+                    }
+               });
           }
-          return {
-               accounts: accounts ?? [],
-               cards: cardStack ?? [],
-          };
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return {
-               accounts: [],
-               cards: [],
-          };
      }
+     return {
+          accounts: accounts ?? [],
+          cards: cardStack ?? [],
+     };
 }
 
 /**
@@ -666,19 +584,7 @@ export async function getViewerAccounts(url, language = 'en') {
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getViewers', postBody);
-     if (response.ok) {
-          let viewers = [];
-          if (!isUndefined(response.data.result.viewers)) {
-               viewers = response.data.result.viewers;
-               PATRON.viewerAcccounts = viewers;
-          }
-          return values(viewers);
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await discovery.post('/UserAPI?method=getViewers', postBody);
 }
 
 /**
@@ -937,33 +843,22 @@ export async function fetchReadingHistory(page = 1, pageSize = 20, sort = 'check
           },
      });
 
-     const response = await api.post('/UserAPI?method=getPatronReadingHistory', postBody);
+     return await api.post('/UserAPI?method=getPatronReadingHistory', postBody);
+}
 
-     let data = [];
+export function formatReadingHistory(data) {
      let morePages = false;
-     let message = null;
-     if (response.ok) {
-          data = response.data;
-          if (data.result?.page_current !== data.result?.page_total) {
-               morePages = true;
-          }
-          if(data.message) {
-               message = data.message;
-          }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          message = error.message;
+     if (data.page_current !== data.page_total) {
+          morePages = true;
      }
-
      return {
-          history: data.result?.readingHistory ?? [],
-          totalResults: data.result?.totalResults ?? 0,
-          curPage: data.result?.page_current ?? 0,
-          totalPages: data.result?.page_total ?? 0,
+          history: data.readingHistory ?? [],
+          totalResults: data.totalResults ?? 0,
+          curPage: data.page_current ?? 0,
+          totalPages: data.page_total ?? 0,
           hasMore: morePages,
-          sort: data.result?.sort ?? 'checkedOut',
-          message: message,
+          sort: data.sort ?? 'checkedOut',
+          message: data.message ?? null,
      };
 }
 
@@ -1103,21 +998,7 @@ export async function fetchSavedSearches(url, language = 'en') {
           },
      });
 
-     const response = await api.post('/ListAPI?method=getSavedSearchesForLiDA', postBody);
-
-     if (response.ok) {
-          return response.data.result.searches;
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-
-     return {
-          success: false,
-          count: 0,
-          countNewResults: 0,
-          searches: [],
-     };
+     return await api.post('/ListAPI?method=getSavedSearchesForLiDA', postBody);
 }
 
 /**
@@ -1201,28 +1082,7 @@ export async function getAppPreferencesForUser(url, language) {
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getAppPreferencesForUser', postBody);
-     if (response.ok) {
-          return response.data.result;
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-     return {
-          success: false,
-          onboardAppNotifications: 0,
-          shouldAskBrightness: 0,
-          notification_preferences: [
-               {
-                    device: 'Unknown',
-                    token: false,
-                    notifySavedSearch: 0,
-                    notifyCustom: 0,
-                    notifyAccount: 0,
-                    onboardStatus: 0,
-               },
-          ],
-     };
+     return await discovery.post('/UserAPI?method=getAppPreferencesForUser', postBody);
 }
 
 /**
@@ -1247,22 +1107,14 @@ export async function fetchNotificationHistory(page = 1, pageSize = 20, forceUpd
           },
      });
 
-     const response = await api.post('/UserAPI?method=getInbox', postBody);
-     let data = [];
-     let message = null;
+     return await api.post('/UserAPI?method=getInbox', postBody);
+}
+
+export function formatNotificationHistory(data) {
      let morePages = false;
-     if (response.ok) {
-          data = response.data.result;
-          if (data.page_current !== data.page_total) {
-               morePages = true;
-          }
-          if(data.message) {
-               message = data.message;
-          }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          message = error.message;
+
+     if (data.page_current !== data.page_total) {
+          morePages = true;
      }
 
      return {
@@ -1271,7 +1123,7 @@ export async function fetchNotificationHistory(page = 1, pageSize = 20, forceUpd
           curPage: data.page_current ?? 0,
           totalPages: data.page_total ?? 0,
           hasMore: morePages,
-          message: message,
+          message: data.message ?? null,
      };
 }
 

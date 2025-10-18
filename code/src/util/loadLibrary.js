@@ -88,36 +88,23 @@ export async function getPickupLocations(url = null, groupedWorkId = null, recor
                recordId,
           }
      });
-     const response = await api.post('/UserAPI?method=getValidPickupLocations', postBody);
+     return await api.post('/UserAPI?method=getValidPickupLocations', postBody);
+}
 
-     if (response.ok) {
-          let locations = [];
-          const result = response.data.result;
-          //update pickup locations to the format we need for select lists
-          const data = response.data.result.pickupLocations;
-          if (_.isObject(data) || _.isArray(data)) {
-               locations = data.map(({ displayName, code, locationId }) => ({
-                    key: locationId,
-                    locationId,
-                    code,
-                    name: displayName,
-               }));
-          }
-
-          try {
-               await AsyncStorage.setItem('@pickupLocations', JSON.stringify(locations));
-          } catch (e) {
-               logDebugMessage(e);
-          }
-
-          PATRON.pickupLocations = locations;
-          result.locations = locations;
-          return result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
+export function formatPickupLocations(data) {
+     let locations = [];
+     const tmp = data.pickupLocations;
+     if (_.isObject(tmp) || _.isArray(tmp)) {
+          locations = tmp.map(({ displayName, code, locationId }) => ({
+               key: locationId,
+               locationId,
+               code,
+               name: displayName,
+          }));
      }
+     PATRON.pickupLocations = locations;
+     data.locations = locations;
+     return data;
 }
 
 export async function getPickupSublocations(url = null) {
@@ -386,16 +373,5 @@ export async function reloadBrowseCategories(maxCat, url = null) {
                },
           });
      }
-     const response = await discovery.post('/SearchAPI?method=getAppActiveBrowseCategories&includeSubCategories=true', postBody);
-
-     if (response.ok) {
-          if (response.data.result) {
-               return formatBrowseCategories(response.data.result);
-          }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
-     return [];
+     return await discovery.post('/SearchAPI?method=getAppActiveBrowseCategories&includeSubCategories=true', postBody);
 }

@@ -27,16 +27,7 @@ export async function getLocationInfo(url = null, locationId = null) {
                version: GLOBALS.appVersion,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getLocationInfo');
-     if (response.ok) {
-          if (response.data.result) {
-               return response.data.result.location;
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return [];
-     }
+     return await discovery.get('/SystemAPI?method=getLocationInfo');
 }
 
 export async function getSelfCheckSettings(url = null) {
@@ -57,24 +48,7 @@ export async function getSelfCheckSettings(url = null) {
                locationId: locationId,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getSelfCheckSettings');
-     if (response.ok) {
-          if (response.data.result) {
-               return response.data.result;
-          } else {
-               return {
-                    success: false,
-                    settings: [],
-               };
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-     return {
-          success: false,
-          settings: [],
-     };
+     return await discovery.get('/SystemAPI?method=getSelfCheckSettings');
 }
 
 export async function getLocations(url, language = 'en', latitude, longitude) {
@@ -89,14 +63,5 @@ export async function getLocations(url, language = 'en', latitude, longitude) {
                language,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getLocations');
-     if (response.ok) {
-          if (response?.data?.result?.locations) {
-               return response.data.result.locations;
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-     return [];
+     return await discovery.get('/SystemAPI?method=getLocations');
 }

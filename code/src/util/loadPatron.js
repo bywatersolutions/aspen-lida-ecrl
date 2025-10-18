@@ -50,30 +50,7 @@ export async function getILSMessages(url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await api.post('/UserAPI?method=getILSMessages', postBody);
-     if (response.ok) {
-          let messages = [];
-          if (response.data.result.messages) {
-               messages = response.data.result.messages;
-               PATRON.messages = messages;
-               try {
-                    await AsyncStorage.setItem('@ILSMessages', JSON.stringify(messages));
-               } catch (e) {
-                    console.log(e);
-               }
-          } else {
-               try {
-                    await AsyncStorage.setItem('@ILSMessages', JSON.stringify(messages));
-               } catch (e) {
-                    console.log(e);
-               }
-          }
-          return messages;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
+     return await api.post('/UserAPI?method=getILSMessages', postBody);
 }
 
 export async function reloadHolds(url) {
@@ -144,16 +121,7 @@ export async function getBrowseCategoryListForUser(url = null) {
                checkIfValid: false,
           },
      });
-     const response = await discovery.post('/API/SearchAPI?method=getBrowseCategoryListForUser', postBody);
-
-     if (response.ok) {
-          return _.sortBy(response.data.result, ['title']);
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return false;
-     }
+     return await discovery.post('/API/SearchAPI?method=getBrowseCategoryListForUser', postBody);
 }
 
 export async function updateBrowseCategoryStatus(id, url = null) {
@@ -166,13 +134,5 @@ export async function updateBrowseCategoryStatus(id, url = null) {
           params: { browseCategoryId: id },
           auth: createAuthTokens(),
      });
-     const response = await discovery.post('/API/UserAPI?method=updateBrowseCategoryStatus', postBody);
-     if (response.ok) {
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return false;
-     }
+     return await discovery.post('/API/UserAPI?method=updateBrowseCategoryStatus', postBody);
 }
