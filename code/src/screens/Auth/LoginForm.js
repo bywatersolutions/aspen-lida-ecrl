@@ -62,7 +62,7 @@ export const GetLoginForm = (props) => {
      // make ref to move the user to next input field
      const passwordRef = useRef();
      const { signIn } = React.useContext(AuthContext);
-     const { updateCatalogStatus, catalogStatus } = React.useContext(LibrarySystemContext);
+     const { updateCatalogStatus, catalogStatus, updateLibrary   } = React.useContext(LibrarySystemContext);
      const { updateLanguage } = React.useContext(LanguageContext);
      const patronsLibrary = props.selectedLibrary;
 
@@ -101,6 +101,10 @@ export const GetLoginForm = (props) => {
           const result = await checkAspenDiscovery(patronsLibrary['baseUrl'], patronsLibrary['libraryId']);
           if (result.ok) {
                const libraryInfo = result.data?.result?.library;
+               updateLibrary(libraryInfo);
+               LIBRARY.id = patronsLibrary['libraryId'];
+               LIBRARY.url = patronsLibrary['baseUrl'];
+               LIBRARY.version = formatDiscoveryVersion(libraryInfo.discoveryVersion);
                logDebugMessage("Successfully received library info");
 
                // check if catalog is in offline mode
@@ -320,15 +324,4 @@ async function checkAspenDiscovery(url, id) {
           },
      });
      return await discovery.get('/SystemAPI?method=getLibraryInfo');
-     if (response.ok) {
-          return {
-               success: true,
-               library: response.data?.result?.library ?? [],
-          };
-     }
-
-     return {
-          success: false,
-          library: [],
-     };
 }

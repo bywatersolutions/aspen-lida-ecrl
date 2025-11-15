@@ -20,6 +20,8 @@ export const LIBRARY = {
      languages: [],
      vdx: [],
      localIll: [],
+     id: 0,
+     version: null,
 };
 
 export const BRANCH = {
@@ -186,6 +188,9 @@ export async function getLocalIllForm(url, id) {
 }
 
 export function formatDiscoveryVersion(payload) {
+     if(LIBRARY.version) {
+          return LIBRARY.version;
+     }
      try {
           if (payload === undefined) {
                logWarnMessage("Could not load discovery version, the version was undefined.");
