@@ -23,6 +23,7 @@ import DisplayBrowseCategory from './Category';
 import { getErrorMessage } from '../../util/apiAuth';
 import { DisplayErrorAlertDialog } from '../../components/loadError';
 import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
+import HomeScreenLinkGrid from './Link';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -38,7 +39,7 @@ export const DiscoverHomeScreen = () => {
      const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
      const { updateIndexes, updateSources, updateCurrentIndex, updateCurrentSource } = React.useContext(SearchContext);
      const { notificationOnboard } = React.useContext(UserContext);
-     const { library } = React.useContext(LibrarySystemContext);
+     const { library, homeScreenLinks } = React.useContext(LibrarySystemContext);
      const { category, updateMaxCategories, maxNum, updateBrowseCategories } = React.useContext(BrowseCategoryContext);
      const { language } = React.useContext(LanguageContext);
 
@@ -196,6 +197,9 @@ export const DiscoverHomeScreen = () => {
                               </InputSlot>
                          </Input>
                     </FormControl>
+                    {homeScreenLinks > 0 ? (
+                         <HomeScreenLinkGrid />
+                    ) : null}
                     {category.map((item, index) => {
                          return <DisplayBrowseCategory category={item} />;
                     })}
