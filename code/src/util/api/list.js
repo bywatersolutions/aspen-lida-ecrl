@@ -309,24 +309,14 @@ export async function deleteList(listId, url, optOutOfSoftDeletion = false) {
 /**
  * Returns all list groups for a given user
  * @param {string} url
- * @param {int} pageGroups
- * @param {int} pageUnassigned
- * @param {int} limit
- * @param {int} includePagination
  **/
-export async function getListGroups(url, pageGroups = 1, pageUnassigned = 1, limit = 20, includePagination = 1) {
+export async function getListGroups(url) {
      const postBody = await postData();
      const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutAverage,
           headers: getHeaders(true),
           auth: createAuthTokens(),
-          params: {
-               pageUnassigned,
-               pageGroups,
-               limit,
-               includePagination
-          }
      });
      return await api.post('/ListAPI?method=getUserListGroups', postBody);
 }
@@ -335,8 +325,11 @@ export async function getListGroups(url, pageGroups = 1, pageUnassigned = 1, lim
  * Returns details about a given list group
  * @param {int} listGroupId
  * @param {string} url
+ * @param {int} page
+ * @param {int} limit
+ * @param {int} includePagination
  **/
-export async function getListGroupDetails(listGroupId, url) {
+export async function getListGroupDetails(listGroupId, url, page = 1, limit = 20, includePagination = 1) {
      const postBody = await postData();
      const api = create({
           baseURL: url + '/API',
@@ -344,7 +337,10 @@ export async function getListGroupDetails(listGroupId, url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
           params: {
-               groupId: listGroupId
+               groupId: listGroupId,
+               page,
+               limit,
+               includePagination
           },
      });
      return await api.post('/ListAPI?method=getListGroupDetails', postBody);
