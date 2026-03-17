@@ -1,0 +1,15 @@
+{
+  "name": "East Central Regional Library",
+  "slug": "ecrl",
+  "easId": "c597dc81-6df0-4476-8d45-900bfa94cca7",
+  "reverseDns": "org.aspendiscovery.ecrl",
+  "discoveryUrl": "https://discovery.ecrlib.org/",
+  "greenhouseUrl": "https://discovery.ecrlib.org/",
+  "libraryId": "3",
+  "themeId": "1",
+  "background": "#ffffff",
+  "sentryProject": "aspen-lida-ecrl",
+  "sentryDsn": "https://a7a51dbc8eb049d8a264114ab2e9a368@o994439.ingest.sentry.io/4504719703670784",
+  "ascAppId": "6447928488",
+  "logLevel": "0"
+}
